@@ -1,11 +1,25 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import {render} from 'react-dom';
 import './index.css';
 import App from './App';
 import registerServiceWorker from './registerServiceWorker';
 import moment from "moment/moment";
 
-ReactDOM.render(<App
-    defaultTimeStart={moment().add(-12, 'hour')}
-    defaultTimeEnd={moment().add(12, 'hour')}/>, document.getElementById('root'));
+import {createStore} from 'redux'
+import {calendarApp} from './reducer'
+import {Provider} from 'react-redux'
+
+let store = createStore(calendarApp, window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__());
+
+const defaultTimeStart = moment().startOf("day");
+const defaultTimeEnd = moment().endOf("day");
+
+// TODO: check https://github.com/fkhadra/react-on-screen
+// TODO: check https://github.com/joshwnj/react-visibility-sensor
+
+render(
+    <Provider store={store}>
+        <App {...{defaultTimeStart, defaultTimeEnd}}/>
+    </Provider>, document.getElementById('root'));
+
 registerServiceWorker();
