@@ -8,13 +8,16 @@ import {generateGroups, generateItems} from "./data";
 import moment from "moment/moment";
 
 import {connect} from 'react-redux'
-import {setGroups, setItems, expandLeft, expandRight} from './actions'
+import {setGroups, setItems, expandLeft, expandRight, setGroupVisibility} from './actions'
 
 import sortedIndexBy from 'lodash/sortedIndexBy'
 import sortedLastIndexBy from 'lodash/sortedLastIndexBy'
+import reject from "lodash/reject"
 
-const GROUPS = 100;
-const ITEMS_GROUPS = 100;
+import VisibilitySensor from 'react-visibility-sensor'
+
+const GROUPS = 1000;
+const ITEMS_GROUPS = 1000;
 
 class App extends Component {
     constructor(props) {
@@ -79,17 +82,38 @@ class App extends Component {
         this.setState({visibleTimeStart, visibleTimeEnd});
     };
 
+    onChange = (id) => (isVisible) => {
+        this.props.setGroupVisibility(id, isVisible);
+    };
+
+    groupRenderer = ({group}) => {
+        if (group.id % 10 === 0) {
+            return (
+                <VisibilitySensor onChange={this.onChange(group.id)}>
+                    <div>[{group.title}]</div>
+                </VisibilitySensor>)
+        } else {
+            return <div>{group.title}</div>
+        }
+    };
+
     render() {
         const {defaultTimeStart, defaultTimeEnd, start, end} = this.state;
         const {visibleTimeStart, visibleTimeEnd} = this.state;
-        const {groups, items: allItems} = this.props;
+        const {groups, items: allItems, visible_groups} = this.props;
 
         const startIndex = sortedIndexBy(allItems, {start_time: start}, 'start_time');
         const endIndex = sortedLastIndexBy(allItems, {start_time: end}, 'start_time');
 
-        const items = allItems.slice(startIndex, endIndex);
+        const allGroupsItems = allItems.slice(startIndex, endIndex);
 
-        console.log("render", allItems.length, items.length, `[${startIndex}...${endIndex}]`);
+        let {0: minId, [visible_groups.length - 1]: maxId} = visible_groups;
+        minId -= 10;
+        maxId += 10;
+
+        const items = reject(allGroupsItems, ({group}) => group < minId || group > maxId);
+
+        console.log("render", allItems.length, allGroupsItems.length, items.length, visible_groups, `[${startIndex}...${endIndex}]`);
 
         return (
             <div className="App">
@@ -104,6 +128,7 @@ class App extends Component {
                           fullUpdate={false}
                           onBoundsChange={this.onBoundsChange}
                           onTimeChange={this.onTimeChange}
+                          groupRenderer={this.groupRenderer}
                           {...{defaultTimeStart, defaultTimeEnd}}
                           {...{visibleTimeStart, visibleTimeEnd}}
                 />
@@ -120,6 +145,7 @@ export default connect(
             expandRight: (date, items) => dispatch(expandRight(date, items)),
             setItems: (left, right, items) => dispatch(setItems(left, right, items)),
             setGroups: (groups) => dispatch(setGroups(groups)),
+            setGroupVisibility: (id, visibility) => dispatch(setGroupVisibility(id, visibility))
         }
     }
 )(App);

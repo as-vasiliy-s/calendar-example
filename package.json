@@ -12,6 +12,7 @@
     "react-on-screen": "^2.0.3",
     "react-redux": "^5.0.7",
     "react-scripts": "1.1.1",
+    "react-visibility-sensor": "^3.11.0",
     "redux": "^3.7.2"
   },
   "scripts": {

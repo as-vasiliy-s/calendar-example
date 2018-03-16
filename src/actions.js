@@ -2,6 +2,7 @@ export const SET_GROUPS = "SET_GROUPS";
 export const SET_ITEMS = "SET_ITEMS";
 export const EXPAND_LEFT = "EXPAND_LEFT";
 export const EXPAND_RIGHT = "EXPAND_RIGHT";
+export const SET_GROUP_VISIBILITY = "SET_GROUP_VISIBILITY";
 
 export function setGroups(groups) {
     return {type: SET_GROUPS, groups}
@@ -17,4 +18,8 @@ export function expandLeft(left, items) {
 
 export function expandRight(right, items) {
     return {type: EXPAND_RIGHT, right, items}
+}
+
+export function setGroupVisibility(id, visibility) {
+    return {type: SET_GROUP_VISIBILITY, id, visibility}
 }
