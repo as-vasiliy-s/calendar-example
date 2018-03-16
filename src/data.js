@@ -1,5 +1,4 @@
 import moment from "moment/moment";
-import sortBy from "lodash/sortBy"
 
 const rnd = (max, min = 0) => Math.floor(Math.random() * (max - min)) + min;
 
@@ -29,7 +28,7 @@ export const generateItems = (startId, from, to, groups, max_duration = 5) => {
             start_time: +start_time.toDate(),
             end_time: +end_time.toDate()
         }
-    })
+    });
 
-    return sortBy(items, 'start_time')
+    return items
 };

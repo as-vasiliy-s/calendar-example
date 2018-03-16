@@ -12,7 +12,9 @@ import {setGroups, setItems, expandLeft, expandRight, setGroupVisibility} from '
 
 import sortedIndexBy from 'lodash/sortedIndexBy'
 import sortedLastIndexBy from 'lodash/sortedLastIndexBy'
-import reject from "lodash/reject"
+import forEach from "lodash/forEach"
+import min from "lodash/min"
+import max from "lodash/max"
 
 import VisibilitySensor from 'react-visibility-sensor'
 
@@ -84,36 +86,57 @@ class App extends Component {
 
     onChange = (id) => (isVisible) => {
         this.props.setGroupVisibility(id, isVisible);
+        // if (isVisible) {
+        //     this.props.setGroupVisibility(id, isVisible);
+        // } else {
+        //     setTimeout(() => this.props.setGroupVisibility(id, isVisible), 500)
+        // }
+    };
+
+    groupsToShow = () => {
+        const {visible_groups, visible_groups_step: step} = this.props;
+        return [min(visible_groups) - step, ...visible_groups, max(visible_groups) + step]
     };
 
     groupRenderer = ({group}) => {
-        if (group.id % 10 === 0) {
+        const {visible_groups, visible_groups_step: step} = this.props;
+
+        const minGroupChunk = min(visible_groups) - step;
+        const maxGroupChunk = max(visible_groups) + step;
+        const groupChunk = Math.floor(group.id / step);
+
+        if (group.id % step === 0) {
             return (
                 <VisibilitySensor onChange={this.onChange(group.id)}>
                     <div>[{group.title}]</div>
                 </VisibilitySensor>)
         } else {
-            return <div>{group.title}</div>
+            if (groupChunk >= minGroupChunk || groupChunk <= maxGroupChunk) {
+                return <div>{group.title}</div>
+            } else {
+                return null
+            }
         }
     };
 
     render() {
         const {defaultTimeStart, defaultTimeEnd, start, end} = this.state;
         const {visibleTimeStart, visibleTimeEnd} = this.state;
-        const {groups, items: allItems, visible_groups} = this.props;
+        const {groups, items: storeItems, counter, visible_groups} = this.props;
 
-        const startIndex = sortedIndexBy(allItems, {start_time: start}, 'start_time');
-        const endIndex = sortedLastIndexBy(allItems, {start_time: end}, 'start_time');
+        let items = [];
 
-        const allGroupsItems = allItems.slice(startIndex, endIndex);
+        forEach(this.groupsToShow(), group => {
+            const groupItems = storeItems[group];
+            if (groupItems) {
+                const startIndex = sortedIndexBy(groupItems, {start_time: start}, 'start_time');
+                const endIndex = sortedLastIndexBy(groupItems, {start_time: end}, 'start_time');
+                const cropedItems = groupItems.slice(startIndex, endIndex);
+                items = [...items, ...cropedItems];
+            }
+        });
 
-        let {0: minId, [visible_groups.length - 1]: maxId} = visible_groups;
-        minId -= 10;
-        maxId += 10;
-
-        const items = reject(allGroupsItems, ({group}) => group < minId || group > maxId);
-
-        console.log("render", allItems.length, allGroupsItems.length, items.length, visible_groups, `[${startIndex}...${endIndex}]`);
+        console.log("render", counter, items.length, visible_groups);
 
         return (
             <div className="App">
