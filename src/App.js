@@ -125,8 +125,8 @@ class App extends Component {
             }
         });
 
-        const {counter, visible_groups} = this.props;
-        console.log("render", counter, items.length, visible_groups);
+        // const {counter, visible_groups} = this.props;
+        // console.log("render", counter, items.length, visible_groups);
 
         return (
             <div className="App">
