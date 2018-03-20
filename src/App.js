@@ -13,8 +13,6 @@ import {setGroups, setItems, expandLeft, expandRight, setGroupVisibility} from '
 import sortedIndexBy from 'lodash/sortedIndexBy'
 import sortedLastIndexBy from 'lodash/sortedLastIndexBy'
 import forEach from "lodash/forEach"
-import min from "lodash/min"
-import max from "lodash/max"
 
 import VisibilitySensor from 'react-visibility-sensor'
 
@@ -47,6 +45,13 @@ class App extends Component {
 
         this.props.setItems(left, right, items);
         this.setState({start: +left, end: +right})
+    }
+
+    shouldComponentUpdate(nextProps, nextState) {
+        const {visible_groups: current} = this.props;
+        const {visible_groups: next} = nextProps;
+        const throttle = current.length > next.length;
+        return !throttle;
     }
 
     onBoundsChange = (boundsStart, boundsEnd) => {
@@ -91,7 +96,8 @@ class App extends Component {
 
     groupsToShow = () => {
         const {visible_groups, visible_groups_step: step} = this.props;
-        return [min(visible_groups) - step, ...visible_groups, max(visible_groups) + step]
+        const minGroup = visible_groups[0];
+        return [...(minGroup ? [minGroup - step] : []), ...visible_groups]
     };
 
     groupRenderer = ({group}) => {
@@ -114,8 +120,9 @@ class App extends Component {
         const {start, end} = this.state;
 
         let items = [];
+        const groupsToShow = this.groupsToShow();
 
-        forEach(this.groupsToShow(), group => {
+        forEach(groupsToShow, group => {
             const groupItems = storeItems[group];
             if (groupItems) {
                 const startIndex = sortedIndexBy(groupItems, {start_time: start}, 'start_time');
@@ -125,8 +132,7 @@ class App extends Component {
             }
         });
 
-        // const {counter, visible_groups} = this.props;
-        // console.log("render", counter, items.length, visible_groups);
+        // console.log("render", this.props.counter, items.length, groupsToShow);
 
         return (
             <div className="App">

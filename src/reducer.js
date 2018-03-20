@@ -1,4 +1,4 @@
-import uniq from "lodash/uniq"
+import sortedUniq from "lodash/sortedUniq"
 import reject from "lodash/reject"
 import groupBy from "lodash/groupBy"
 import sortBy from "lodash/sortBy"
@@ -51,7 +51,7 @@ export function calendarApp(state = initialState, action) {
             };
         case SET_GROUP_VISIBILITY:
             if (action.visibility) {
-                return {...state, visible_groups: uniq([action.id, ...state.visible_groups].sort((a, b) => a - b))}
+                return {...state, visible_groups: sortedUniq([action.id, ...state.visible_groups].sort((a, b) => a - b))}
             } else {
                 return {
                     ...state,
