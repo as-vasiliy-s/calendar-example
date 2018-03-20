@@ -49,48 +49,44 @@ class App extends Component {
         this.setState({start: +left, end: +right})
     }
 
-    onBoundsChange = (start, end) => {
-        const MIN_DEPTH = [6, "days"];
+    onBoundsChange = (boundsStart, boundsEnd) => {
+        const LOAD_DEPTH = [6, "days"];
+        const ITEMS_DEPTH = 48 * 3600 * 1000;
 
-        start = moment(start);
-        end = moment(end);
+        boundsStart = moment(boundsStart);
+        boundsEnd = moment(boundsEnd);
 
-        console.log("onBoundsChange", start.toDate(), end.toDate());
+        // console.log("onBoundsChange", start.toDate(), end.toDate());
 
         let {left, right, counter} = this.props;
         left = moment(left);
         right = moment(right);
 
-        if (start < left) {
-            const minStart = moment(left).subtract(...MIN_DEPTH);
-            const loadingStart = start < minStart ? start : minStart;
+        if (boundsStart < left) {
+            const minStart = moment(left).subtract(...LOAD_DEPTH);
+            const loadingStart = boundsStart < minStart ? boundsStart : minStart;
             const leftItems = generateItems(counter, loadingStart.toDate(), left.toDate(), ITEMS_GROUPS);
             this.props.expandLeft(loadingStart.toDate(), leftItems);
             counter += leftItems.length
         }
 
-        if (end > right) {
-            const minEnd = moment(right).add(...MIN_DEPTH);
-            const loadingEnd = end > minEnd ? end : minEnd;
+        if (boundsEnd > right) {
+            const minEnd = moment(right).add(...LOAD_DEPTH);
+            const loadingEnd = boundsEnd > minEnd ? boundsEnd : minEnd;
             const rightItems = generateItems(counter, right.toDate(), loadingEnd.toDate(), ITEMS_GROUPS);
             this.props.expandRight(loadingEnd.toDate(), rightItems);
         }
 
-        this.setState({start: +start.toDate(), end: +end.toDate()})
-    };
 
-    onTimeChange = (visibleTimeStart, visibleTimeEnd, updateScrollCanvas) => {
-        updateScrollCanvas(visibleTimeStart, visibleTimeEnd);
-        this.setState({visibleTimeStart, visibleTimeEnd});
+        const {start: currentStart, end: currentEnd} = this.state;
+        const start = +boundsStart.toDate(), end = +boundsEnd.toDate();
+        if (start < currentStart || end > currentEnd) {
+            this.setState({start: start - ITEMS_DEPTH, end: end + ITEMS_DEPTH})
+        }
     };
 
     onChange = (id) => (isVisible) => {
         this.props.setGroupVisibility(id, isVisible);
-        // if (isVisible) {
-        //     this.props.setGroupVisibility(id, isVisible);
-        // } else {
-        //     setTimeout(() => this.props.setGroupVisibility(id, isVisible), 500)
-        // }
     };
 
     groupsToShow = () => {
@@ -99,11 +95,7 @@ class App extends Component {
     };
 
     groupRenderer = ({group}) => {
-        const {visible_groups, visible_groups_step: step} = this.props;
-
-        const minGroupChunk = min(visible_groups) - step;
-        const maxGroupChunk = max(visible_groups) + step;
-        const groupChunk = Math.floor(group.id / step);
+        const {visible_groups_step: step} = this.props;
 
         if (group.id % step === 0) {
             return (
@@ -111,18 +103,15 @@ class App extends Component {
                     <div>[{group.title}]</div>
                 </VisibilitySensor>)
         } else {
-            if (groupChunk >= minGroupChunk || groupChunk <= maxGroupChunk) {
-                return <div>{group.title}</div>
-            } else {
-                return null
-            }
+            return <div>{group.title}</div>
         }
     };
 
     render() {
-        const {defaultTimeStart, defaultTimeEnd, start, end} = this.state;
-        const {visibleTimeStart, visibleTimeEnd} = this.state;
-        const {groups, items: storeItems, counter, visible_groups} = this.props;
+        const {defaultTimeStart, defaultTimeEnd} = this.state;
+        const {groups, items: storeItems} = this.props;
+
+        const {start, end} = this.state;
 
         let items = [];
 
@@ -136,6 +125,7 @@ class App extends Component {
             }
         });
 
+        const {counter, visible_groups} = this.props;
         console.log("render", counter, items.length, visible_groups);
 
         return (
@@ -150,10 +140,8 @@ class App extends Component {
                           maxZoom={7 * 86400 * 1000}
                           fullUpdate={false}
                           onBoundsChange={this.onBoundsChange}
-                          onTimeChange={this.onTimeChange}
                           groupRenderer={this.groupRenderer}
                           {...{defaultTimeStart, defaultTimeEnd}}
-                          {...{visibleTimeStart, visibleTimeEnd}}
                 />
             </div>
         );
