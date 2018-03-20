@@ -13,11 +13,13 @@ import {setGroups, setItems, expandLeft, expandRight, setGroupVisibility} from '
 import sortedIndexBy from 'lodash/sortedIndexBy'
 import sortedLastIndexBy from 'lodash/sortedLastIndexBy'
 import forEach from "lodash/forEach"
+import throttle from "lodash/throttle"
 
 import VisibilitySensor from 'react-visibility-sensor'
 
 const GROUPS = 1000;
 const ITEMS_GROUPS = 1000;
+const GROUPS_THROTTLE = 1000;
 
 class App extends Component {
     constructor(props) {
@@ -45,13 +47,6 @@ class App extends Component {
 
         this.props.setItems(left, right, items);
         this.setState({start: +left, end: +right})
-    }
-
-    shouldComponentUpdate(nextProps, nextState) {
-        const {visible_groups: current} = this.props;
-        const {visible_groups: next} = nextProps;
-        const throttle = current.length > next.length;
-        return !throttle;
     }
 
     onBoundsChange = (boundsStart, boundsEnd) => {
@@ -90,8 +85,24 @@ class App extends Component {
         }
     };
 
-    onChange = (id) => (isVisible) => {
-        this.props.setGroupVisibility(id, isVisible);
+    ids_visibility = {};
+
+    throttledSetGroupVisibility = throttle(() => {
+        // console.log("SetVisibility", this.ids_visibility);
+        this.props.setGroupVisibility(this.ids_visibility);
+        this.ids_visibility = {}
+    }, GROUPS_THROTTLE, {leading: false});
+
+    accumulateGroupVisibility = (id, isVisible) => {
+        const count = this.ids_visibility[id] || 0;
+        this.ids_visibility[id] = Math.sign(count + isVisible ? 1 : -1);
+        // console.log("Accumulate", this.ids_visibility);
+    };
+
+    onChangeGroupVisibility = (id) => (isVisible) => {
+        // console.log("Change", id, isVisible);
+        this.accumulateGroupVisibility(id, isVisible);
+        this.throttledSetGroupVisibility()
     };
 
     groupsToShow = () => {
@@ -105,7 +116,7 @@ class App extends Component {
 
         if (group.id % step === 0) {
             return (
-                <VisibilitySensor onChange={this.onChange(group.id)}>
+                <VisibilitySensor onChange={this.onChangeGroupVisibility(group.id)}>
                     <div>[{group.title}]</div>
                 </VisibilitySensor>)
         } else {

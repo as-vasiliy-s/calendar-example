@@ -4,6 +4,7 @@ import groupBy from "lodash/groupBy"
 import sortBy from "lodash/sortBy"
 import mapValues from "lodash/mapValues"
 import mergeWith from "lodash/mergeWith"
+import forEach from "lodash/forEach"
 
 import {SET_GROUPS, SET_ITEMS, EXPAND_LEFT, EXPAND_RIGHT, SET_GROUP_VISIBILITY} from "./actions";
 
@@ -14,7 +15,7 @@ const initialState = {
     groups: [],
     items: {},
     visible_groups: [],
-    visible_groups_step: 10,
+    visible_groups_step: 5,
 };
 
 const groupItems = (items, step) => groupBy(items, ({group}) => Math.floor(group / step) * step);
@@ -50,14 +51,20 @@ export function calendarApp(state = initialState, action) {
                 counter: state.counter + action.items.length
             };
         case SET_GROUP_VISIBILITY:
-            if (action.visibility) {
-                return {...state, visible_groups: sortedUniq([action.id, ...state.visible_groups].sort((a, b) => a - b))}
-            } else {
-                return {
-                    ...state,
-                    visible_groups: reject(state.visible_groups, id => id === action.id).sort((a, b) => a - b)
+            let added = [], removed = {};
+
+            forEach(action.ids_visibility, (count, id) => {
+                if (count > 0) {
+                    added.push(id)
+                } else if (count < 0) {
+                    removed[id] = true
                 }
-            }
+            });
+
+            let visible_groups = [...added, ...state.visible_groups];
+            visible_groups = sortedUniq(reject(visible_groups, (id) => removed[id]).sort((a, b) => a - b))
+
+            return {...state, visible_groups}
         default:
             return state
     }
