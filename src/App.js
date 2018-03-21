@@ -13,13 +13,13 @@ import {setGroups, setItems, expandLeft, expandRight, setGroupVisibility} from '
 import sortedIndexBy from 'lodash/sortedIndexBy'
 import sortedLastIndexBy from 'lodash/sortedLastIndexBy'
 import forEach from "lodash/forEach"
-import throttle from "lodash/throttle"
+import debounce from "lodash/debounce"
 
 import VisibilitySensor from 'react-visibility-sensor'
 
 const GROUPS = 1000;
 const ITEMS_GROUPS = 1000;
-const GROUPS_THROTTLE = 1000;
+const GROUPS_REFRESH_DEBOUNCE = 200;
 
 class App extends Component {
     constructor(props) {
@@ -87,22 +87,22 @@ class App extends Component {
 
     ids_visibility = {};
 
-    throttledSetGroupVisibility = throttle(() => {
+    refreshGroupVisibility = debounce(() => {
         // console.log("SetVisibility", this.ids_visibility);
         this.props.setGroupVisibility(this.ids_visibility);
-        this.ids_visibility = {}
-    }, GROUPS_THROTTLE, {leading: false});
+        this.ids_visibility = {};
+    }, GROUPS_REFRESH_DEBOUNCE, {leading: false, trailing: true});
 
     accumulateGroupVisibility = (id, isVisible) => {
-        const count = this.ids_visibility[id] || 0;
-        this.ids_visibility[id] = Math.sign(count + isVisible ? 1 : -1);
-        // console.log("Accumulate", this.ids_visibility);
+        const oldVal = this.ids_visibility[id] || 0;
+        this.ids_visibility[id] = oldVal + (isVisible ? 1 : -1);
+        // console.log(`Accumulate ${id}::${isVisible}; ${oldVal} => ${this.ids_visibility[id]}`, this.ids_visibility);
     };
 
     onChangeGroupVisibility = (id) => (isVisible) => {
         // console.log("Change", id, isVisible);
         this.accumulateGroupVisibility(id, isVisible);
-        this.throttledSetGroupVisibility()
+        this.refreshGroupVisibility()
     };
 
     groupsToShow = () => {
