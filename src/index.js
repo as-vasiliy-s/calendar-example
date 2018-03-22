@@ -1,6 +1,5 @@
 import React from 'react';
 import {render} from 'react-dom';
-import './index.css';
 import App from './App';
 import registerServiceWorker from './registerServiceWorker';
 import moment from "moment/moment";
@@ -9,7 +8,7 @@ import {createStore} from 'redux'
 import {calendarApp} from './reducer'
 import {Provider} from 'react-redux'
 
-export default function renderCalendar(elementId, defaultTimeStart = moment().startOf("day"), defaultTimeEnd = moment().endOf("day")) {
+export default function renderCalendar(elementId, defaultTimeStart = moment().startOf("day").toDate(), defaultTimeEnd = moment().endOf("day").toDate()) {
     const store = createStore(calendarApp, window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__());
 
     render(
@@ -20,10 +19,8 @@ export default function renderCalendar(elementId, defaultTimeStart = moment().st
     registerServiceWorker();
 }
 
-// if (process.env.NODE_ENV !== 'production') {
-//     renderCalendar('root');
-// } else {
-//     window.renderCalendar = renderCalendar;
-// }
-
-renderCalendar('root');
+if (process.env.NODE_ENV === 'production') {
+    window.renderCalendar = renderCalendar;
+} else {
+    renderCalendar('root');
+}

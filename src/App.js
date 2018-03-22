@@ -1,6 +1,4 @@
 import React, {Component} from 'react';
-import logo from './logo.svg';
-import './App.css';
 
 import Timeline from 'react-calendar-timeline/lib';
 
@@ -124,6 +122,14 @@ class App extends Component {
         }
     };
 
+    itemRenderer = ({item}) => {
+        const {title, start_time, end_time} = item;
+        const tooltip = `${title}\n${moment(start_time).toString()}\n${moment(end_time).toString()}`;
+        return (
+            <div title={tooltip}>{title}</div>
+        )
+    };
+
     render() {
         const {defaultTimeStart, defaultTimeEnd} = this.state;
         const {groups, items: storeItems} = this.props;
@@ -146,21 +152,17 @@ class App extends Component {
         // console.log("render", this.props.counter, items.length, groupsToShow);
 
         return (
-            <div className="App">
-                <header className="App-header">
-                    <img src={logo} className="App-logo" alt="logo"/>
-                    <h1 className="App-title">Welcome to React</h1>
-                </header>
-                <Timeline groups={groups}
-                          items={items}
-                          minZoom={2 * 60 * 60 * 1000}
-                          maxZoom={7 * 86400 * 1000}
-                          fullUpdate={false}
-                          onBoundsChange={this.onBoundsChange}
-                          groupRenderer={this.groupRenderer}
-                          {...{defaultTimeStart, defaultTimeEnd}}
-                />
-            </div>
+            <Timeline groups={groups}
+                      items={items}
+                      minZoom={2 * 60 * 60 * 1000}
+                      maxZoom={7 * 86400 * 1000}
+                      fullUpdate={false}
+                      canChangeGroup={false}
+                      onBoundsChange={this.onBoundsChange}
+                      groupRenderer={this.groupRenderer}
+                      itemRenderer={this.itemRenderer}
+                      {...{defaultTimeStart, defaultTimeEnd}}
+            />
         );
     }
 }
