@@ -35,23 +35,19 @@ class Calendar extends Component {
     componentDidMount() {
         const {timeline: {defaultTimeStart, defaultTimeEnd}, getGroups, getEvents} = this.props;
 
-        getGroups().then(groups => {
-            this.props.setGroups(groups)
-        }).catch(
-            this.ajaxError('retreive Groups')
-        );
-
         const diff = moment(defaultTimeEnd).diff(moment(defaultTimeStart));
         const left = moment(defaultTimeStart).subtract(diff).toDate();
         const right = moment(defaultTimeEnd).add(diff).toDate();
 
-        getEvents(left, right).then(events => {
+        Promise.all(
+            [getGroups(), getEvents(left, right)]
+        ).then(([groups, events]) => {
+            this.props.setGroups(groups);
             this.props.setItems(left, right, events);
+            this.setState({start: +left, end: +right})
         }).catch(
-            this.ajaxError('retreive Events')
+            this.ajaxError('initial data retreive')
         );
-
-        this.setState({start: +left, end: +right})
     }
 
     onBoundsChange = (boundsStart, boundsEnd) => {
@@ -118,15 +114,19 @@ class Calendar extends Component {
     };
 
     groupRenderer = ({group}) => {
-        const {visible_groups_step: step, timeline: {keys: {groupTitleKey}}} = this.props;
+        const {visible_groups_step: step, timeline: {keys: {groupTitleKey}}, groupsIdToIndex} = this.props;
+        const {id, [groupTitleKey]: title, account} = group;
+        const index = groupsIdToIndex[id];
 
-        if (group.index % step === 0) {
+        const style = account ? {} : {fontWeight: 'bold'};
+
+        if (index % step === 0) {
             return (
-                <VisibilitySensor onChange={this.onChangeGroupVisibility(group.index)}>
-                    <div>[{group[groupTitleKey]}]</div>
+                <VisibilitySensor onChange={this.onChangeGroupVisibility(index)}>
+                    <div title={index} style={style}>[{title}]</div>
                 </VisibilitySensor>)
         } else {
-            return <div>{group[groupTitleKey]}</div>
+            return <div title={index} style={style}>{title}</div>
         }
     };
 
@@ -141,7 +141,7 @@ class Calendar extends Component {
         let items = [];
         const groupsToShow = this.groupsToShow();
 
-        const {itemTimeStartKey: key} = timelineOptions;
+        const {keys: {itemTimeStartKey: key}} = timelineOptions;
 
         forEach(groupsToShow, group => {
             const groupItems = storeItems[group];
@@ -153,7 +153,7 @@ class Calendar extends Component {
             }
         });
 
-        // console.log("render", items.length, groupsToShow);
+        console.log("render", items.length, groupsToShow);
 
         return (
             <Timeline

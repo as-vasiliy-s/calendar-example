@@ -1,10 +1,16 @@
 import moment from "moment/moment";
+import times from "lodash/times";
 
 export let itemsIdCounter = 0;
 
 const rnd = (max, min = 0) => Math.floor(Math.random() * (max - min)) + min;
+const sample = (array) => array[Math.floor(Math.random() * array.length)];
 
-export const generateGroups = n => Array.from(Array(n), (_, id) => ({id, name: `group ${id}`, index: id}));
+export const generateGroups = (n, topGroupsPart = 10) => {
+    const topGroups = times(Math.floor(n / topGroupsPart) + 1, (i) => ({id: `A_${i}`, name: `account ${i}`}));
+    const subGroups = times(n, (i) => ({id: `L_${i}`, name: `listing ${i}`, account: sample(topGroups).id}));
+    return [...topGroups, ...subGroups]
+};
 
 export const generateItems = (from, to, groups, max_duration = 5) => {
     const hours = moment(to).diff(moment(from), "hours");
@@ -27,7 +33,7 @@ export const generateItems = (from, to, groups, max_duration = 5) => {
             id,
             title: `item ${id}`,
             tooltip: `item ${id}\n${start_time.toString()}\n${end_time.toString()}`,
-            group: rnd(groups),
+            group: `L_${rnd(groups)}`,
             start: +start_time.toDate(),
             end: +end_time.toDate(),
         }

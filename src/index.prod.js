@@ -1,6 +1,6 @@
 import React from 'react';
 import {render} from 'react-dom';
-import registerServiceWorker from './registerServiceWorker';
+// import registerServiceWorker from './registerServiceWorker';
 import defaultsDeep from 'lodash/defaultsDeep'
 
 import {createStore} from 'redux'
@@ -17,7 +17,7 @@ export function renderApp(elementId, component) {
 
 export function renderCalendar(elementId, options) {
     renderApp(elementId, <Calendar {...defaultsDeep(options, Calendar.default_props)}/>);
-    registerServiceWorker();
+    // registerServiceWorker();
 }
 
 window.renderCalendar = renderCalendar;
