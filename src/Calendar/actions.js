@@ -20,6 +20,6 @@ export function expandRight(right, items) {
     return {type: EXPAND_RIGHT, right, items}
 }
 
-export function setGroupVisibility(ids_visibility) {
-    return {type: SET_GROUP_VISIBILITY, ids_visibility}
+export function setGroupVisibility(visibilityIndexes) {
+    return {type: SET_GROUP_VISIBILITY, visibilityIndexes}
 }
