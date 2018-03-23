@@ -9,10 +9,18 @@ npm run start
 
 Then see http://localhost:3000
 
-#### Build bundle
+#### Build local bundle
+
+```sh
+NODE_ENV=local npm run build
+```
+
+Then open `build/index.html`
+
+#### Build production bundle
 
 ```sh
 npm run build
 ```
 
-Then open `build/index.html`
+Get results from `build` subfolder
